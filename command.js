@@ -10,13 +10,10 @@ const figlet = require('figlet')
 const fse = require('fs-extra')
 const ls = require('ls')
 const curr_path = process.cwd()
-
 const npm = require('npm')
-
 const fs = require('fs')
 const path = require('path')
 const cpx = require('cpx')
-
 const port = 3000
 
 let filename = 'gulpfile.js'
@@ -78,14 +75,29 @@ program
 		cpx.copy(src , target , () => {
 			console.log('SUCCESS')
 		})
-	})
-
+  })
+  
 program
-	.command('run')
-	.alias('r')
-	.action((dir , cmd) => {
-		run()
-	})
+  .command('addlaravelpage')
+  .action(() => {
+		chalkText('Add Page').color('yellow')
+		let laravel_q = [
+			{
+				type: 'input' ,
+				name: 'filename' ,
+				message: 'Fle name' 
+			} ,
+			{
+				type: 'input' ,
+				name: 'filename_css' ,
+				message: 'Scss name'
+			}
+		]
+		prompt(laravel_q).then(answer => {
+			addlaravelpage(answer)
+		})
+  })
+
 
 program
 	.command('task')
@@ -112,6 +124,43 @@ program
 
 program.parse(process.argv)
 
+function chalkText(val) {
+	return {
+		color(color) {
+			switch(color) {
+				case 'green' :
+					console.log(
+						chalk.green.bold(
+							figlet.textSync(val)
+						)
+					)
+					break;
+				case 'yellow':
+					console.log(
+						chalk.yellow.bold(
+							figlet.textSync(val)
+						)
+					)
+					break;
+				case 'white':
+					console.log(
+						chalk.white.bold(
+							figlet.textSync(val)
+						)
+					)
+					break;
+				default:
+					console.log(
+						chalk.green.bold(
+							figlet.textSync(val)
+						)
+					)
+					break;
+			} 
+		}
+	}
+}
+
 function copyFile(src , dest) {
 	let readStream = fs.createReadStream(src)
 
@@ -121,11 +170,53 @@ function copyFile(src , dest) {
 	readStream.pipe(fs.createWriteStream(dest))
 }
 
+function addlaravelpage(data) {
+  let curr_path = path.join(__dirname , 'src/page_laravel/index.blade.php')
+  let curr_path_scss = path.join(__dirname , 'src/page_laravel/index.scss')
+  let cwd = process.cwd()
+  let target_path = path.join(cwd , 'resources/views')
+  let ensure = path.join(cwd , `resources/views/${data.filename}`)
+  let ensure_scss = path.join(cwd , `resources/scss/pages/${data.filename_css}`) 
+
+  fse.pathExists(target_path , (err , exists) => {
+  	console.log(err)
+  	console.log(exists)
+
+  	if (!exists) {
+  		console.log(chalk.bgRed.white.bold('sory its not laravel folder'))
+  		console.log(chalk.bgRed.white.bold("             :')           "))
+  		console.log(chalk.bgRed.white.bold("             :')           "))
+  		console.log(chalk.bgRed.white.bold("             :')           "))
+  	} else {
+			console.log('Create file here')
+		  fse.ensureDir(ensure , err => {
+		  	if (err) {
+		  		console.log(err)
+		  	} else {
+		  		console.log(ensure)
+		  		cpx.copy(curr_path_scss, ensure_scss , err => {
+				    if (err) {
+				      console.log('error copyng' , err)
+				    }
+				  })
+		  		cpx.copy(curr_path , ensure , err => {
+				    if (err) {
+				      console.log('error copyng' , err)
+				    } else {
+				     	// chalkText('success add page').color('yellow')
+				  		console.log(chalk.bgRed.white.bold('success add page'))
+				    }
+				  })
+		  	}
+		  })			
+  	}
+  })
+}
+
 function copy() {
 	let src2 = path.join(__dirname , './testgulpfile.js')
 	console.log('current path' , path.join(curr_path , '/'))
 	console.log('curent executable path' , src2)
-	
 
 	fse.copySync( src2 , path.join(curr_path , './') , err => {
 		if (err) {
@@ -145,13 +236,7 @@ function npmInstall(pkg) {
 				if (err) {
 					console.log(err)
 				} else {
-					console.log(
-						chalk.green.bold(
-							figlet.textSync('success install')
-						) ,
-						'' ,
-						chalk.white('makasih loh')
-					)
+					chalkText('success install').color('green')
 				}
 			})
 		}
@@ -179,7 +264,7 @@ function addTask(data) {
 
 	if (data.prepocessor == 'scss') {
 		console.log('youre using SCSS')
-		installPkg = ['scss' , 'autoprefixer' , ...installPkg]
+		installPkg = ['gulp-sass' , 'gulp-autoprefixer' , ...installPkg]
 	}
 
 	if (data.install) {
