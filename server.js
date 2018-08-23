@@ -189,7 +189,6 @@ function addTask(data) {
 }
 
 function addPeople(user) {
-	console.log(`Oke ${user.firstname} lets do this`)
 }
 
 function run(answer) {
